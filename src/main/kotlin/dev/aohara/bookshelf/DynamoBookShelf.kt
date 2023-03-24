@@ -16,17 +16,12 @@ fun dynamoBookShelf(dynamoDb: DynamoDb, tableName: TableName, createTable: Boole
     if (createTable) table.createTable()
 
     return object: BookShelf {
-
-        private val primaryIndex = table.primaryIndex()
-
         override fun get(id: UUID) = table[id]
-        override fun iterator() = primaryIndex.scan().iterator()
+        override fun iterator() = table.primaryIndex().scan().iterator()
         override fun save(name: String, author: String): Book {
-            return Book(
-                id = UUID.randomUUID(),
-                name = name,
-                author = author
-            ).also { table += it }
+            val book = Book(name = name, author = author)
+            table += book
+            return book
         }
     }
 }

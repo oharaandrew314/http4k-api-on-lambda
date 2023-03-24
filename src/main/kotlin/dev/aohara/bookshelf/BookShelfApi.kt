@@ -31,7 +31,7 @@ import java.util.UUID
 @KotshiJsonAdapterFactory
 private object BookShelfJsonAdapterFactory : JsonAdapter.Factory by KotshiBookShelfJsonAdapterFactory
 
-// configure a JSON AutoMarshalling without reflection, via Kotshi
+// configure JSON AutoMarshalling without reflection, via Kotshi
 val bookShelfJson = ConfigurableMoshi(
     Moshi.Builder()
         .add(BookShelfJsonAdapterFactory) // <-- Kotshi
@@ -89,6 +89,7 @@ object Contract {
 }
 
 fun BookShelf.toHttp() = routes(
+    // build and attach the API
     contract {
         routes += Contract.listBooks to { _: Request ->
             Response(OK).with(Contract.bookShelfLens of toDto())
@@ -116,6 +117,8 @@ fun BookShelf.toHttp() = routes(
         )
         descriptionPath = "openapi"
     },
+
+    // Attach a Swagger UI
     swaggerUi(
         descriptionRoute = Uri.of("openapi"),
         title = "BookShelf API"

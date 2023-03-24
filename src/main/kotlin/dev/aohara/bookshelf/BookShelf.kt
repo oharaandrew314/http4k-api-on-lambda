@@ -10,7 +10,7 @@ interface BookShelf: Iterable<Book> {
 
 @JsonSerializable // Serializable for use with the Dynamo DB mapper
 data class Book(
-    val id: UUID,
     val name: String,
-    val author: String
+    val author: String,
+    val id: UUID = UUID.randomUUID()
 )

@@ -41,10 +41,11 @@ class ApiLambdaHandler : ApiGatewayV2LambdaFunction(AppLoader {
     val env = Environment.from(it)
 
     val dynamoDb = DynamoDb.Http(
-        env = env,
+        env = env, // get AWS credentials and region directly from env
         http = Java8HttpClient() // Has faster cold-start than the java 11 client
     )
     val tableName = tableKey(env)
 
-    dynamoBookShelf(dynamoDb, tableName).toHttp()
+    dynamoBookShelf(dynamoDb, tableName)
+        .toHttp()
 })
