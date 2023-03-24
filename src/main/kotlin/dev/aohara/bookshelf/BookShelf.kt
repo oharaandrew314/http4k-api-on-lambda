@@ -1,5 +1,6 @@
 package dev.aohara.bookshelf
 
+import se.ansman.kotshi.JsonSerializable
 import java.util.UUID
 
 interface BookShelf: Iterable<Book> {
@@ -7,3 +8,9 @@ interface BookShelf: Iterable<Book> {
     fun save(name: String, author: String): Book
 }
 
+@JsonSerializable // Serializable for use with the Dynamo DB mapper
+data class Book(
+    val id: UUID,
+    val name: String,
+    val author: String
+)

@@ -1,7 +1,5 @@
-package dev.aohara.bookshelf.api
+package dev.aohara.bookshelf
 
-import dev.aohara.bookshelf.Book
-import dev.aohara.bookshelf.BookShelf
 import se.ansman.kotshi.JsonSerializable
 import java.util.UUID
 

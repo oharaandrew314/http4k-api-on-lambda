@@ -1,13 +1,22 @@
-package dev.aohara.bookshelf.api
+package dev.aohara.bookshelf
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import org.http4k.contract.contract
 import org.http4k.contract.div
 import org.http4k.contract.meta
+import org.http4k.contract.openapi.ApiInfo
+import org.http4k.contract.openapi.v3.OpenApi3
+import org.http4k.contract.openapi.v3.OpenApi3ApiRenderer
+import org.http4k.contract.ui.swaggerUi
 import org.http4k.core.Method
 import org.http4k.core.Method.GET
+import org.http4k.core.Request
+import org.http4k.core.Response
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Uri
+import org.http4k.core.with
 import org.http4k.format.ConfigurableMoshi
 import org.http4k.format.ListAdapter
 import org.http4k.format.MapAdapter
@@ -15,15 +24,17 @@ import org.http4k.format.asConfigurable
 import org.http4k.format.withStandardMappings
 import org.http4k.lens.Path
 import org.http4k.lens.uuid
+import org.http4k.routing.routes
 import se.ansman.kotshi.KotshiJsonAdapterFactory
 import java.util.UUID
 
 @KotshiJsonAdapterFactory
 private object BookShelfJsonAdapterFactory : JsonAdapter.Factory by KotshiBookShelfJsonAdapterFactory
 
+// configure a JSON AutoMarshalling without reflection, via Kotshi
 val bookShelfJson = ConfigurableMoshi(
     Moshi.Builder()
-        .add(BookShelfJsonAdapterFactory)
+        .add(BookShelfJsonAdapterFactory) // <-- Kotshi
         .add(ListAdapter)
         .add(MapAdapter)
         .asConfigurable()
@@ -76,3 +87,37 @@ object Contract {
         returning(OK, bookLens to bookSample)
     } bindContract Method.POST
 }
+
+fun BookShelf.toHttp() = routes(
+    contract {
+        routes += Contract.listBooks to { _: Request ->
+            Response(OK).with(Contract.bookShelfLens of toDto())
+        }
+
+        routes += Contract.getBook to { id ->
+            {
+                get(id)
+                    ?.let { Response(OK).with(Contract.bookLens of it.toDto()) }
+                    ?: Response(NOT_FOUND)
+            }
+        }
+
+        routes += Contract.addBook to { req: Request ->
+            val data = Contract.bookDataLens(req)
+            val book = save(name = data.name, author = data.author)
+            Response(OK).with(Contract.bookLens of book.toDto())
+        }
+
+        // generate OpenApi spec with non-reflective JSON provider
+        renderer = OpenApi3(
+            apiInfo = ApiInfo("BookShelf API", "1.0"),
+            json = bookShelfJson,
+            apiRenderer = OpenApi3ApiRenderer(bookShelfJson)
+        )
+        descriptionPath = "openapi"
+    },
+    swaggerUi(
+        descriptionRoute = Uri.of("openapi"),
+        title = "BookShelf API"
+    )
+)
