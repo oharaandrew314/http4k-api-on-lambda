@@ -17,7 +17,7 @@ Resources:
     Properties:
       Handler: dev.aohara.bookshelf.ApiLambdaHandler
       Runtime: java11  # latest java version supported by AWS Lambda
-      MemorySize: 1024  # Prefer slightly larger sizes for most JVM apps
+      MemorySize: 2048  # I find 2048 to give the best cold-start; anything higher will have negligible gains
       Events:
         HttpApiEvent: # Wrap our Lambda with an HTTP API Gateway
           Type: HttpApi
