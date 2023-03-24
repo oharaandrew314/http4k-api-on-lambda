@@ -1,0 +1,31 @@
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  BookShelfTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  ApiLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dev.aohara.bookshelf.ApiLambdaHandler
+      Runtime: java11  # latest java version supported by AWS Lambda
+      MemorySize: 1024  # Prefer slightly larger sizes for most JVM apps
+      Events:
+        HttpApiEvent: # Wrap our Lambda with an HTTP API Gateway
+          Type: HttpApi
+      Architectures: [ arm64 ]
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BookShelfTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref BookShelfTable
+          JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1  # Optimize JIT compilation for cold-start time
