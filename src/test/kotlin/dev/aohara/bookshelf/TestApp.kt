@@ -1,5 +1,6 @@
 package dev.aohara.bookshelf
 
+import dev.aohara.bookshelf.api.bookShelfJson
 import org.http4k.connect.amazon.dynamodb.FakeDynamoDb
 import org.http4k.connect.amazon.dynamodb.mapper.tableMapper
 import org.http4k.connect.amazon.dynamodb.model.TableName
@@ -11,7 +12,8 @@ fun testApp(): App {
 
     val table = dynamoDb.tableMapper<Book, UUID, Unit>(
         TableName = TableName.of("shelf"),
-        primarySchema = bookShelfTableSchema
+        primarySchema = bookShelfTableSchema,
+        autoMarshalling = bookShelfJson
     ).also { it.createTable() }
 
     return App(table.toBookShelf())
