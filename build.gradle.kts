@@ -14,7 +14,7 @@ kotlin {
 val kotshiVersion = "2.10.2"
 
 dependencies {
-    implementation(platform("org.http4k:http4k-bom:4.41.0.0"))
+    implementation(platform("org.http4k:http4k-bom:4.41.1.0"))
     implementation(platform("org.http4k:http4k-connect-bom:3.35.0.0"))
 
     implementation("org.http4k:http4k-core")
@@ -26,6 +26,7 @@ dependencies {
     implementation("org.http4k:http4k-connect-amazon-dynamodb")
     implementation("se.ansman.kotshi:api:$kotshiVersion")
     ksp("se.ansman.kotshi:compiler:$kotshiVersion")
+    implementation("org.slf4j:slf4j-simple:2.0.6")
 
     testImplementation(kotlin("test"))
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.5.5")

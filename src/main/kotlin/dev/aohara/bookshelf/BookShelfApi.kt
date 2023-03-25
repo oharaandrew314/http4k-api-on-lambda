@@ -8,14 +8,16 @@ import org.http4k.contract.meta
 import org.http4k.contract.openapi.ApiInfo
 import org.http4k.contract.openapi.v3.OpenApi3
 import org.http4k.contract.openapi.v3.OpenApi3ApiRenderer
-import org.http4k.contract.ui.swaggerUi
+import org.http4k.contract.ui.swaggerUiLite
+import org.http4k.core.Filter
+import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
-import org.http4k.core.Uri
+import org.http4k.core.then
 import org.http4k.core.with
 import org.http4k.format.ConfigurableMoshi
 import org.http4k.format.ListAdapter
@@ -25,6 +27,8 @@ import org.http4k.format.withStandardMappings
 import org.http4k.lens.Path
 import org.http4k.lens.uuid
 import org.http4k.routing.routes
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import se.ansman.kotshi.KotshiJsonAdapterFactory
 import java.util.UUID
 
@@ -88,9 +92,16 @@ object Contract {
     } bindContract Method.POST
 }
 
-fun BookShelf.toHttp() = routes(
-    // build and attach the API
-    contract {
+fun BookShelf.toHttp(logger: Logger = LoggerFactory.getLogger("root")): HttpHandler {
+    val loggingFilter = Filter { next ->
+        { request ->
+            val response = next(request)
+            logger.info("${request.method} ${request.uri}: ${response.status}")
+            response
+        }
+    }
+
+    val api = contract {
         routes += Contract.listBooks to { _: Request ->
             Response(OK).with(Contract.bookShelfLens of toDto())
         }
@@ -116,11 +127,15 @@ fun BookShelf.toHttp() = routes(
             apiRenderer = OpenApi3ApiRenderer(bookShelfJson)
         )
         descriptionPath = "openapi"
-    },
+    }
 
-    // Attach a Swagger UI
-    swaggerUi(
-        descriptionRoute = Uri.of("openapi"),
-        title = "BookShelf API"
+    val ui = swaggerUiLite {
+        url = "openapi"
+        pageTitle = "BookShelf API"
+    }
+
+    return routes(
+        loggingFilter.then(api),
+        ui
     )
-)
+}
